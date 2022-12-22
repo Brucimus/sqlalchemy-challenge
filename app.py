@@ -28,7 +28,7 @@ Station = Base.classes.station
 app = Flask(__name__)
 
 #################################################
-# Flask Routes
+# Function to calc temp aggs
 #################################################
 
 def temp_dict_calc(temp_agg):
@@ -38,6 +38,10 @@ def temp_dict_calc(temp_agg):
     temp_dict["avg_temp"] = temp_agg[0][2]
     return temp_dict
 
+#################################################
+# Flask Routes
+#################################################
+
 @app.route("/")
 def welcome():
     """List all available api routes."""
@@ -46,6 +50,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/&lt;start&gt;<br/>"
+        f"/api/v1.0/&lt;start&gt;/&lt;end&gt;<br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -87,8 +93,8 @@ def temperature():
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
-    """Return a dictionary of dates and precipitation"""
-    # Query dates and precipitation
+    """Return a dictionary of dates and temperature over the last year"""
+    # Query dates and temperature
     most_recent = session.query(Measurement).order_by(Measurement.date.desc()).first()
     one_year_ago = dt.datetime.strptime(most_recent.date, '%Y-%m-%d') - dt.timedelta(days=365)
 
@@ -110,6 +116,7 @@ def date_start(start):
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
+    # finds aggregate data with requested start date
     temp_agg = session.execute(f'select min(tobs) as min_temp, max(tobs) as max_temp, avg(tobs) as avg_temp from measurement where date > "{start}"').fetchall()
 
     return jsonify(temp_dict_calc(temp_agg))
@@ -119,6 +126,7 @@ def date_start_end(start, end):
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
+    # finds aggregate data with requested start and end dates
     temp_agg = session.execute(f'select min(tobs) as min_temp, max(tobs) as max_temp, avg(tobs) as avg_temp from measurement where date > "{start}" and date <= "{end}"').fetchall()
     
     return jsonify(temp_dict_calc(temp_agg))   
