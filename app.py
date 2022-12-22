@@ -31,6 +31,13 @@ app = Flask(__name__)
 # Flask Routes
 #################################################
 
+def temp_dict_calc(temp_agg):
+    temp_dict = {}
+    temp_dict["min_temp"] = temp_agg[0][0]
+    temp_dict["max_temp"] = temp_agg[0][1]
+    temp_dict["avg_temp"] = temp_agg[0][2]
+    return temp_dict
+
 @app.route("/")
 def welcome():
     """List all available api routes."""
@@ -105,12 +112,7 @@ def date_start(start):
 
     temp_agg = session.execute(f'select min(tobs) as min_temp, max(tobs) as max_temp, avg(tobs) as avg_temp from measurement where date > "{start}"').fetchall()
 
-    temp_dict = {}
-    temp_dict["min_temp"] = temp_agg[0][0]
-    temp_dict["max_temp"] = temp_agg[0][1]
-    temp_dict["avg_temp"] = temp_agg[0][2]
-    
-    return jsonify(temp_dict)
+    return jsonify(temp_dict_calc(temp_agg))
 
 @app.route("/api/v1.0/<start>/<end>")
 def date_start_end(start, end):
@@ -119,12 +121,7 @@ def date_start_end(start, end):
 
     temp_agg = session.execute(f'select min(tobs) as min_temp, max(tobs) as max_temp, avg(tobs) as avg_temp from measurement where date > "{start}" and date <= "{end}"').fetchall()
     
-    temp_dict = {}
-    temp_dict["min_temp"] = temp_agg[0][0]
-    temp_dict["max_temp"] = temp_agg[0][1]
-    temp_dict["avg_temp"] = temp_agg[0][2]
-    
-    return jsonify(temp_dict)
+    return jsonify(temp_dict_calc(temp_agg))   
 
 if __name__ == '__main__':
     app.run(debug=True)
